@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright(c) 2015 - 2017 Realtek Corporation.
+ * Copyright(c) 2015 - 2019 Realtek Corporation.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -59,10 +59,10 @@ exit:
 
 void rtl8822bs_get_interrupt(PADAPTER adapter, u32 *hisr, u16 *rx_len)
 {
-	u8 data[6] = {0};
+	u8 data[8] = {0};
 
 
-	rtw_read_mem(adapter, REG_SDIO_HISR_8822B, 6, data);
+	rtw_read_mem(adapter, REG_SDIO_HISR_8822B, 8, data);
 
 	if (hisr)
 		*hisr = le32_to_cpu(*(u32 *)data);
@@ -135,6 +135,7 @@ static void init_interrupt(PADAPTER adapter)
  * Assumption:
  *	Using SDIO Local register ONLY for configuration.
  */
+#if defined(CONFIG_WOWLAN) || defined(CONFIG_AP_WOWLAN)
 static void clear_interrupt_all(PADAPTER adapter)
 {
 	PHAL_DATA_TYPE hal;
@@ -146,7 +147,7 @@ static void clear_interrupt_all(PADAPTER adapter)
 	hal = GET_HAL_DATA(adapter);
 	rtl8822bs_clear_interrupt(adapter, 0xFFFFFFFF);
 }
-
+#endif /*#if defined(CONFIG_WOWLAN) || defined(CONFIG_AP_WOWLAN)*/
 /*
  * Description:
  *	Enalbe SDIO Host Interrupt Mask configuration on SDIO local domain.
@@ -299,7 +300,7 @@ static void gethwreg(PADAPTER adapter, u8 variable, u8 *val)
 			*val |= PS_TOGGLE;
 		break;
 
-#if defined(CONFIG_WOWLAN) || defined(CONFIG_AP_WOWLAN)
+#if defined(CONFIG_WOWLAN) || defined(CONFIG_AP_WOWLAN) || defined(CONFIG_FWLPS_IN_IPS)
 	case HW_VAR_RPWM_TOG:
 		*val = rtw_read8(adapter, REG_SDIO_HRPWM1_8822B);
 		*val &= BIT_TOGGLE_8822B;
@@ -382,6 +383,7 @@ void rtl8822bs_set_hal_ops(PADAPTER adapter)
 	ops->read_adapter_info = read_adapter_info;
 
 	ops->hal_init = rtl8822bs_init;
+	ops->hal_deinit = rtl8822bs_deinit;
 
 	ops->init_xmit_priv = rtl8822bs_init_xmit_priv;
 	ops->free_xmit_priv = rtl8822bs_free_xmit_priv;

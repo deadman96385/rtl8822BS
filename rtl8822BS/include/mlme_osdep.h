@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright(c) 2007 - 2017 Realtek Corporation.
+ * Copyright(c) 2007 - 2019 Realtek Corporation.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -14,11 +14,6 @@
  *****************************************************************************/
 #ifndef	__MLME_OSDEP_H_
 #define __MLME_OSDEP_H_
-
-
-#if defined(PLATFORM_WINDOWS) || defined(PLATFORM_MPIXEL)
-	extern int time_after(systime now, systime old);
-#endif
 
 extern void rtw_os_indicate_disconnect(_adapter *adapter, u16 reason, u8 locally_generated);
 extern int rtw_os_indicate_connect(_adapter *adapter);

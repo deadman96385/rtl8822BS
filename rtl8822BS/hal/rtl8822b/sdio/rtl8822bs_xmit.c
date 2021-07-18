@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright(c) 2015 - 2018 Realtek Corporation.
+ * Copyright(c) 2015 - 2019 Realtek Corporation.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -386,7 +386,6 @@ static s32 xmit_handler(PADAPTER adapter)
 
 	pxmitpriv = &adapter->xmitpriv;
 
-wait:
 	ret = _rtw_down_sema(&pxmitpriv->SdioXmitSema);
 	if (_FAIL == ret) {
 		RTW_ERR("%s: down sema fail!\n", __FUNCTION__);
@@ -424,7 +423,7 @@ next:
 			rtw_msleep_os(1);
 #else
 #ifdef RTW_XMIT_THREAD_HIGH_PRIORITY_AGG
-			rtw_usleep_os(50);
+			rtw_usleep_os(10);
 #else
 			rtw_yield_os();
 #endif
@@ -440,7 +439,7 @@ thread_return rtl8822bs_xmit_thread(thread_context context)
 	s32 ret;
 	PADAPTER adapter;
 	struct xmit_priv *pxmitpriv;
-	u8 thread_name[20] = "RTWHALXT";
+	u8 thread_name[20] = {0};
 #ifdef RTW_XMIT_THREAD_HIGH_PRIORITY_AGG
 #ifdef PLATFORM_LINUX
 	struct sched_param param = { .sched_priority = 1 };
@@ -454,7 +453,7 @@ thread_return rtl8822bs_xmit_thread(thread_context context)
 	adapter = (PADAPTER)context;
 	pxmitpriv = &adapter->xmitpriv;
 
-	rtw_sprintf(thread_name, 20, "%s-"ADPT_FMT, thread_name, ADPT_ARG(adapter));
+	rtw_sprintf(thread_name, 20, "RTWHALXT-"ADPT_FMT, ADPT_ARG(adapter));
 	thread_enter(thread_name);
 
 	RTW_INFO("start "FUNC_ADPT_FMT"\n", FUNC_ADPT_ARG(adapter));
@@ -572,7 +571,6 @@ s32 rtl8822bs_hal_xmit(PADAPTER adapter, struct xmit_frame *pxmitframe)
 	s32 ret;
 
 
-	pxmitframe->attrib.qsel = pxmitframe->attrib.priority;
 	pxmitpriv = &adapter->xmitpriv;
 
 #ifdef CONFIG_80211N_HT
@@ -610,6 +608,7 @@ s32 rtl8822bs_init_xmit_priv(PADAPTER adapter)
 	xmitpriv = &adapter->xmitpriv;
 
 	_rtw_init_sema(&xmitpriv->SdioXmitSema, 0);
+	rtl8822b_init_xmit_priv(adapter);
 	return _SUCCESS;
 }
 
